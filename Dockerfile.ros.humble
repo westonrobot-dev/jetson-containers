@@ -10,7 +10,7 @@ ENV ROS_DISTRO=humble
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 ENV ROS_PYTHON_VERSION=3
 
-ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 ENV SHELL /bin/bash
 SHELL ["/bin/bash", "-c"] 
 
@@ -96,28 +96,38 @@ RUN cd /tmp && ./opencv_install.sh ${OPENCV_URL} ${OPENCV_DEB}
 # upgrade cmake - https://stackoverflow.com/a/56690743
 # this is needed to build some of the ROS2 packages
 #
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-		  software-properties-common \
-		  apt-transport-https \
-		  ca-certificates \
-		  gnupg \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-		  	  
-# use pip to upgrade cmake instead because of kitware's rotating GPG keys:
-# https://github.com/dusty-nv/jetson-containers/issues/216			  
-#RUN wget -qO - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add - && \
-#    apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" && \
-#    apt-get update && \
-#    apt-get install -y --no-install-recommends --only-upgrade \
-#            cmake \
-#    && rm -rf /var/lib/apt/lists/* \
-#    && apt-get clean
-    
-RUN pip3 install --upgrade --no-cache-dir --verbose cmake   
-RUN cmake --version
 
+# RUN apt-get update && \
+#     apt-get install -y --no-install-recommends \
+# 		  software-properties-common \
+# 		  apt-transport-https \
+# 		  ca-certificates \
+# 		  gnupg \
+#     && rm -rf /var/lib/apt/lists/* \
+#     && apt-get clean
+		  	  
+# # use pip to upgrade cmake instead because of kitware's rotating GPG keys:
+# # https://github.com/dusty-nv/jetson-containers/issues/216			  
+# #RUN wget -qO - https://apt.kitware.com/keys/kitware-archive-latest.asc | apt-key add - && \
+# #    apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" && \
+# #    apt-get update && \
+# #    apt-get install -y --no-install-recommends --only-upgrade \
+# #            cmake \
+# #    && rm -rf /var/lib/apt/lists/* \
+# #    && apt-get clean
+    
+# RUN pip3 install --upgrade --no-cache-dir --verbose cmake   
+# RUN cmake --version
+
+# update to fixed version v3.22
+RUN ARCH=$(uname -m) && \
+    CMAKE_INSTALLER=cmake-3.22.1-linux-$ARCH.sh && \
+    FULL_INSTALLER_URL=https://cmake.org/files/v3.22/$CMAKE_INSTALLER && \
+    wget $FULL_INSTALLER_URL && \
+    chmod +x $CMAKE_INSTALLER && \
+    ./$CMAKE_INSTALLER --prefix=/usr/local/ --skip-license && \
+    ldconfig && rm $CMAKE_INSTALLER
+    
 
 #
 # remove other versions of Python3
